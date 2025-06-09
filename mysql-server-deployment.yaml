@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: mysql-server
+  name: mysql-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mysql-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.36.0 (ae2a39403)
+      labels:
+        io.kompose.service: mysql-server
+    spec:
+      containers:
+        - env:
+            - name: MYSQL_DATABASE
+              value: students
+            - name: MYSQL_PASSWORD
+              value: "1234"
+            - name: MYSQL_ROOT_PASSWORD
+              value: rootpass
+            - name: MYSQL_USER
+              value: user
+          image: mysql:8.0
+          name: mysql-server
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: mysql-server-claim0
+            - mountPath: /docker-entrypoint-initdb.d/init.sql
+              name: mysql-server-claim1
+      restartPolicy: Always
+      volumes:
+        - name: mysql-server-claim0
+          persistentVolumeClaim:
+            claimName: mysql-server-claim0
+        - name: mysql-server-claim1
+          persistentVolumeClaim:
+            claimName: mysql-server-claim1

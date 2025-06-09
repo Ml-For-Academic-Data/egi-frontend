@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: airflow-scheduler
+  name: airflow-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: airflow-scheduler
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.36.0 (ae2a39403)
+      labels:
+        io.kompose.service: airflow-scheduler
+    spec:
+      containers:
+        - args:
+            - airflow
+            - scheduler
+          env:
+            - name: AIRFLOW__CORE__EXECUTOR
+              value: SequentialExecutor
+          image: airflow-w-sklearn
+          name: airflow-scheduler
+          volumeMounts:
+            - mountPath: /opt/airflow/dags
+              name: airflow-scheduler-cm0
+            - mountPath: /opt/airflow
+              name: airflow-scheduler-claim3
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            name: airflow-scheduler-cm0
+          name: airflow-scheduler-cm0
+        - name: airflow-scheduler-claim3
+          persistentVolumeClaim:
+            claimName: airflow-scheduler-claim3

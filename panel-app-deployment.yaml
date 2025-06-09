@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.36.0 (ae2a39403)
+  labels:
+    io.kompose.service: panel-app
+  name: panel-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: panel-app
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.36.0 (ae2a39403)
+      labels:
+        io.kompose.service: panel-app
+    spec:
+      containers:
+        - image: panel-app
+          name: panel-app
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /app
+              name: panel-app-cm1
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            name: panel-app-cm1
+          name: panel-app-cm1

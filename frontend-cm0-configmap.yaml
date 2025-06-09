@@ -1,0 +1,26 @@
+apiVersion: v1
+data:
+  Dockerfile: |-
+    FROM python:3.9-slim
+
+    WORKDIR /app
+
+    COPY requirements.txt .
+    RUN pip install --no-cache-dir -r requirements.txt
+
+    COPY . .
+
+    EXPOSE 3000
+
+    CMD ["python", "app.py"]
+  app.py: "from flask import Flask, redirect, request, session, url_for, render_template, flash\nfrom keycloak import KeycloakOpenID\nimport os\n\napp = Flask(__name__)\napp.secret_key = os.urandom(24)  # Clave secreta más segura\n\n# Configuración para Docker (usa nombres de servicio)\nkeycloak_openid = KeycloakOpenID(\n    server_url=\"http://host.docker.internal:8081/\",  # Nombre del servicio en la red Docker\n    client_id=\"frontend-client\",\n    realm_name=\"ML\",\n    client_secret_key=\"ZUA1nSULKbOUVSczgFnlN4kKwK7m9YaV\"\n)\n\n# URLs (desde el navegador usa localhost)\nFRONTEND_URL = \"http://localhost:3000\"\nREDIRECT_URI = f\"{FRONTEND_URL}/callback\"\n\n@app.route(\"/\")\ndef home():\n    if not session.get(\"access_token\"):\n        return redirect(url_for(\"login\"))\n    \n    userinfo = session.get(\"userinfo\", {})\n    roles = userinfo.get(\"resource_access\", {}).get(\"frontend-client\", {}).get(\"roles\", [])\n    return render_template(\"index.html\", \n                         username=userinfo.get(\"preferred_username\", \"Usuario\"),\n                         email=userinfo.get(\"email\", \"\"),\n                         roles=roles)\n\n@app.route(\"/login\")\ndef login():\n    auth_url = keycloak_openid.auth_url(\n        redirect_uri=REDIRECT_URI,\n        scope=\"openid profile email\"\n    )\n    return redirect(auth_url)\n\n@app.route(\"/callback\")\ndef callback():\n    code = request.args.get(\"code\")\n    if not code:\n        flash(\"No se recibió código de autorización\")\n        return redirect(url_for(\"login\"))\n\n    try:\n        token = keycloak_openid.token(\n            grant_type=\"authorization_code\",\n            code=code,\n            redirect_uri=REDIRECT_URI\n        )\n        \n        access_token = token.get(\"access_token\")\n        session[\"access_token\"] = token.get(\"access_token\")\n        session[\"refresh_token\"] = token.get(\"refresh_token\")\n        session[\"id_token\"] = token.get(\"id_token\")\n        session[\"userinfo\"] = keycloak_openid.userinfo(token[\"access_token\"])\n\n        from jwt import decode  # pip install pyjwt\n        decoded_token = decode(access_token, options={\"verify_signature\": False})\n        session[\"userinfo\"] = {\n            \"resource_access\": {\n                \"frontend-client\": {\n                    \"roles\": decoded_token.get(\"resource_access\", {}).get(\"frontend-client\", {}).get(\"roles\", [])\n                }\n            }\n        }\n        \n        return redirect(url_for(\"home\"))\n    \n    except Exception as e:\n        flash(f\"Error de autenticación: {str(e)}\")\n        return redirect(url_for(\"login\"))\n\n@app.route(\"/airflow\")\ndef airflow():\n    if not session.get(\"access_token\"):\n        return redirect(url_for(\"login\"))\n    return redirect(\"http://airflow:8080\")  # Nombre del servicio en Docker\n\n@app.route(\"/panel\")\ndef panel():\n    if not session.get(\"access_token\"):\n        return redirect(url_for(\"login\"))\n    return redirect(\"http://panel-app:5000\")  # Nombre del servicio en Docker\n\n@app.route(\"/logout\")\ndef logout():\n    id_token = session.get('id_token')\n    refresh_token = session.get('refresh_token')\n    session.clear()\n    \n    try:\n        if refresh_token:\n            keycloak_openid.logout(refresh_token)\n        \n        logout_url = (\n            f\"http://localhost:8081/realms/ML/protocol/openid-connect/logout?\"\n            f\"post_logout_redirect_uri={FRONTEND_URL}\"\n        )\n\n        if id_token:\n            logout_url += f\"&id_token_hint={id_token}\"\n\n        return redirect(logout_url)\n        \n    except Exception as e:\n        print(f\"Error en logout: {str(e)}\")\n        return redirect(url_for(\"login\"))\n\nif __name__ == \"__main__\":\n    app.run(debug=True, host=\"0.0.0.0\", port=3000)"
+  requirements.txt: |-
+    Flask==2.3.3
+    python-keycloak==3.7.0
+    PyJWT==2.8.0
+    requests==2.31.0
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: frontend
+  name: frontend-cm0
