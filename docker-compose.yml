@@ -18,16 +18,3 @@ services:
       - ../egi-control/data:/opt/airflow/data  # Compartimos los datos con la app
       - ./visualization:/app  # Compartimos la app con el contenedor
 
-  # frontend:
-  #   # build:
-  #   #   context: ./
-  #   image: 
-  #   container_name: frontend-app
-  #   ports:
-  #     - "3000:3000"
-  #   networks:
-  #     - internal_network
-  #   environment:
-  #   - FLASK_ENV=development
-  #   volumes:
-  #   - ./frontend:/app

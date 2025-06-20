@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Denegado - EGI ML Platform</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            color: #dc3545;
+        }
+        
+        h1 {
+            color: #dc3545;
+            margin-bottom: 15px;
+            font-size: 2em;
+        }
+        
+        .message {
+            color: #6c757d;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .user-info h4 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .user-detail {
+            color: #666;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        
+        .buttons {
+            margin-top: 25px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🚫</div>
+        <h1>Acceso Denegado</h1>
+        
+        <div class="message">
+            {{ message }}
+        </div>
+        
+        <div class="user-info">
+            <h4>📋 Información del Usuario</h4>
+            <div class="user-detail"><strong>Usuario:</strong> {{ user.name }}</div>
+            <div class="user-detail"><strong>Email:</strong> {{ user.email }}</div>
+            <div class="user-detail"><strong>Tipo:</strong> {{ user.user_type|title }}</div>
+            {% if user.roles %}
+            <div class="user-detail"><strong>Roles:</strong> {{ user.roles|join(', ') }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="buttons">
+            {% if user.user_type == 'tecnico' %}
+            <a href="/force-index" class="btn btn-primary">🏠 Ir al Portal</a>
+            {% elif user.user_type == 'comun' %}
+            <a href="/panel" class="btn btn-primary">📊 Ir al Panel</a>
+            {% endif %}
+            <a href="/debug" class="btn btn-secondary">🔍 Debug Info</a>
+            <a href="/oauth2/sign_out" class="btn btn-secondary">🚪 Cerrar Sesión</a>
+        </div>
+    </div>
+</body>
+</html>
