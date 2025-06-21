@@ -1,6 +1,11 @@
 from flask import Flask, render_template, redirect, jsonify
+import os
 
 app = Flask(__name__)
+
+# Obtener URLs de variables de entorno o usar valores por defecto para desarrollo
+AIRFLOW_URL = os.getenv("AIRFLOW_URL", "http://localhost:8080")
+PANEL_URL = os.getenv("PANEL_URL", "http://localhost:5000")
 
 @app.route("/")
 def home():
@@ -11,13 +16,13 @@ def home():
 def airflow_redirect():
     """Redirige a Airflow"""
     # En desarrollo: redirige al puerto directo de Airflow
-    return redirect("http://localhost:8080")
+    return redirect(AIRFLOW_URL)
 
 @app.route("/panel")
 def panel_redirect():
     """Redirige a Panel Dashboard"""
     # En desarrollo: redirige al puerto directo de Panel
-    return redirect("http://localhost:5000")
+    return redirect(PANEL_URL)
 
 @app.route("/health")
 def health_check():
@@ -35,8 +40,8 @@ def info():
         "frontend": "EGI ML Platform",
         "version": "1.0",
         "apps_disponibles": {
-            "airflow": "http://localhost:8080",
-            "panel": "http://localhost:5000"
+            "airflow": AIRFLOW_URL,
+            "panel": PANEL_URL
         },
         "autenticacion": "Deshabilitada (desarrollo)"
     })
@@ -44,8 +49,8 @@ def info():
 if __name__ == "__main__":
     print("🚀 EGI ML Platform Frontend")
     print("📋 Aplicaciones disponibles:")
-    print("   - Airflow: /airflow")
-    print("   - Panel: /panel")
+    print(f"   - Airflow: {AIRFLOW_URL}")
+    print(f"   - Panel: {PANEL_URL}")
     print("🔍 Endpoints útiles:")
     print("   - Health: /health")
     print("   - Info: /info")

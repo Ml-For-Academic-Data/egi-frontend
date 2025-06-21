@@ -7,14 +7,17 @@ networks:
 
 services:
 
-  panel-app:
-    # build:
-    #   context: ./visualization
-    image: matiascollado/frontend-panel-app:v1.0
-    container_name: panel-app
+   frontend:
+    build:
+      context: ./
+    image: frontend-app-image
+    container_name: frontend-app
     ports:
-      - "5000:5000"
-    volumes:
-      - ../egi-control/data:/opt/airflow/data  # Compartimos los datos con la app
-      - ./visualization:/app  # Compartimos la app con el contenedor
+      - "3000:3000"
+    networks:
+      - internal_network
+    environment:
+      FLASK_ENV: development
+      AIRFLOW_URL: http://airflow-webserver:8080
+      PANEL_URL: http://panel-app:5000
 
