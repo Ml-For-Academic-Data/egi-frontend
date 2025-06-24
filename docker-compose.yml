@@ -18,3 +18,21 @@ services:
       - ../egi-control/data:/opt/airflow/data  # Compartimos los datos con la app
       - ./visualization:/app  # Compartimos la app con el contenedor
 
+  frontend:
+    build:
+      context: ../egi-frontend
+      dockerfile: Dockerfile
+    container_name: egi-frontend
+    environment:
+      - FLASK_ENV=development
+    volumes:
+      - ../egi-frontend:/app  # Para hot reload en desarrollo
+    ports:
+      - "3000:3000"  # Expuesto para acceso directo
+    networks:
+      - internal_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
